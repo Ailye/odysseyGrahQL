@@ -7,9 +7,11 @@ const schema = buildSchema(`
     type Query {
         course(id: Int!): Course
         courses(topic: String): [Course]
+        coursesTitle(title: String): [Course]
     }
     type Mutation {
         updateCourseTopic(id: Int!, topic: String!): Course
+        addCourse(title: String, author: String, description: String, topic: String, url: String): [Course]
     }
     type Course {
       id: Int
@@ -21,7 +23,7 @@ const schema = buildSchema(`
     }
 `);
 
-var coursesData = [
+const coursesData = [
   {
     id: 1,
     title: "The Complete Node.js Developer Course",
@@ -77,11 +79,35 @@ const updateCourseTopic = function ({ id, topic }) {
   return coursesData[0];
 };
 
+const getCoursesTitle = function (args) {
+  if (args.title) {
+    const title = args.title;
+    return coursesData.filter((course) => course.title.includes(title));
+  }
+};
+
+const addCourse = function ({ title, author, description, topic, url }) {
+  const newCourse = {
+    id: coursesData.length + 1,
+    title: title,
+    author: author,
+    description: description,
+    topic: topic,
+    url: url,
+  };
+
+  coursesData.push(newCourse);
+
+  return coursesData;
+};
+
 // Root resolver
 const root = {
   course: getCourse,
   courses: getCourses,
   updateCourseTopic: updateCourseTopic,
+  coursesTitle: getCoursesTitle,
+  addCourse: addCourse,
 };
 
 // Create an express server and a GrapQL endpoint
@@ -98,6 +124,25 @@ app.use(
 app.listen(4000, () => console.log("Express GraphQL running on 4k"));
 
 // Queries
+
+/* Query 3 :
+ query getCoursesTitle($courseTitle: String!) {
+  coursesTitle(title: $courseTitle) {
+    id
+    title
+    author
+    description
+    topic
+    url
+  }
+}
+*/
+/*  Param : 
+  {
+  "courseTitle": "The Complete Node.js Developer Course"
+  }
+*/
+
 /* Query 1 : 
 query getCoursesForTopic($courseTopic: String!) {
   courses(topic: $courseTopic) {
